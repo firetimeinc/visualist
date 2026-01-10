@@ -1,23 +1,42 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Tool, ToolCategory } from '@/types/tool';
-import { tools } from '@/data/tools';
+import { tools as localTools } from '@/data/tools';
+import { getTools } from '@/lib/tools';
 import ToolCard from '@/components/ToolCard';
 import CategoryFilter from '@/components/CategoryFilter';
 import Sidebar from '@/components/Sidebar';
 import ToolDetailPanel from '@/components/ToolDetailPanel';
 
 export default function Home() {
+  const [tools, setTools] = useState<Tool[]>(localTools);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
+  useEffect(() => {
+    async function fetchTools() {
+      try {
+        setLoading(true);
+        const fetchedTools = await getTools();
+        setTools(fetchedTools);
+      } catch (error) {
+        console.error('Failed to fetch tools:', error);
+        // Keep local tools as fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTools();
+  }, []);
+
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(new Set(tools.map((tool) => tool.category)));
     return uniqueCategories.sort();
-  }, []);
+  }, [tools]);
 
   const filteredTools = useMemo(() => {
     let filtered = tools;
@@ -34,7 +53,7 @@ export default function Home() {
         (tool) =>
           tool.name.toLowerCase().includes(query) ||
           tool.description.toLowerCase().includes(query) ||
-          tool.tags.some((tag) => tag.toLowerCase().includes(query))
+          (Array.isArray(tool.tags) && tool.tags.some((tag) => tag.toLowerCase().includes(query)))
       );
     }
 
@@ -44,7 +63,7 @@ export default function Home() {
       if (!a.featured && b.featured) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [activeCategory, searchQuery]);
+  }, [tools, activeCategory, searchQuery]);
 
   const handleToolClick = (tool: Tool) => {
     setSelectedTool(tool);
@@ -79,7 +98,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
-          <Sidebar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          <Sidebar searchQuery={searchQuery} onSearchChange={setSearchQuery} tools={tools} />
 
           {/* Main Content Area */}
           <div className="flex-1">
@@ -91,7 +110,12 @@ export default function Home() {
             />
 
             {/* Tools Grid */}
-            {filteredTools.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                <p className="text-gray-600 mt-4">Loading tools...</p>
+              </div>
+            ) : filteredTools.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredTools.map((tool) => (
                   <ToolCard key={tool.id} tool={tool} onClick={() => handleToolClick(tool)} />
@@ -139,7 +163,7 @@ export default function Home() {
                 <div>
                   <div className="text-3xl font-bold text-gray-900">
                     <i className="fas fa-tags text-orange-600 mr-2"></i>
-                    {new Set(tools.flatMap((t) => t.tags)).size}
+                    {new Set(tools.flatMap((t) => Array.isArray(t.tags) ? t.tags : [])).size}
                   </div>
                   <div className="text-gray-600 text-sm mt-1">Tags</div>
                 </div>

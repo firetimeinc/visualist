@@ -115,7 +115,7 @@ export default function ToolDetailPanel({ tool, isOpen, onClose }: ToolDetailPan
               </div>
 
               {/* Tags */}
-              {tool.tags.length > 0 && (
+              {Array.isArray(tool.tags) && tool.tags.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-2">
                     <i className="fas fa-tags mr-2 text-orange-600"></i>
@@ -137,7 +137,16 @@ export default function ToolDetailPanel({ tool, isOpen, onClose }: ToolDetailPan
               {/* Visit Link */}
               <div className="pt-4 border-t border-gray-200">
                 <a
-                  href={tool.url}
+                  href={(() => {
+                    let url = tool.url.trim();
+                    
+                    // Remove ALL protocol prefixes first (http://, https://, //)
+                    url = url.replace(/^(https?:\/\/)+/i, '');
+                    url = url.replace(/^\/\/+/, '');
+                    
+                    // Now ensure it has exactly one https:// prefix
+                    return `https://${url}`;
+                  })()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"

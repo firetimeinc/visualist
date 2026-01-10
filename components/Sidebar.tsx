@@ -1,13 +1,14 @@
 'use client';
 
-import { tools } from '@/data/tools';
+import { Tool } from '@/types/tool';
 
 interface SidebarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  tools: Tool[];
 }
 
-export default function Sidebar({ searchQuery, onSearchChange }: SidebarProps) {
+export default function Sidebar({ searchQuery, onSearchChange, tools }: SidebarProps) {
   const categories = Array.from(new Set(tools.map((tool) => tool.category))).length;
   const featured = tools.filter((t) => t.featured).length;
 

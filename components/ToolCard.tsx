@@ -29,7 +29,7 @@ export default function ToolCard({ tool, onClick }: ToolCardProps) {
         </p>
         
         <div className="flex flex-wrap gap-2 pt-2">
-          {tool.tags.slice(0, 3).map((tag) => (
+          {Array.isArray(tool.tags) && tool.tags.length > 0 && tool.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md"
@@ -41,7 +41,7 @@ export default function ToolCard({ tool, onClick }: ToolCardProps) {
         
         <div className="pt-2 flex items-center text-sm text-gray-600 group-hover:text-orange-600 transition-colors">
           <i className="fas fa-info-circle mr-2"></i>
-          View details
+          View More
           <i className="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
         </div>
       </div>
